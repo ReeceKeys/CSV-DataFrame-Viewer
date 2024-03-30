@@ -31,6 +31,11 @@ def init_df():
 
     ID = ''
 
+    pd.set_option('display.width', 600)
+    pd.set_option('display.max_rows', 500)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('max_colwidth', 400)
+
     view_column_flag = False
     view_row_flag = False
     query_column_flag = False
@@ -67,10 +72,7 @@ def init_df():
     print("Columns: [" + str(df.shape[1]) + "] " + str(list_columns))
     print("Rows: [" + str(df.shape[0]) + "]")
 
-    pd.set_option('display.width', 600)
-    pd.set_option('display.max_rows', None)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('max_colwidth', 400)
+    
 
     
 def choose_file():
@@ -131,11 +133,11 @@ def query_column(key, operator, column):
     for i in range(0, len(query_column_key)):
         
         if query_column_operator[i] == '=':
-            df2 = df2.query(str(query_column_column[i]) + ' == ' + f'"{str(query_column_key[i])}"')
+            df2 = df2.query(str(f'`{query_column_column[i]}`' + ' == ' + f'"{str(query_column_key[i])}"'))
         if query_column_operator[i] == '<':
-            df2 = df2.query(str(query_column_column[i]) + ' < ' + str(query_column_key[i]))
+            df2 = df2.query(str(f'`{query_column_column[i]}`' + ' < ' + str(query_column_key[i])))
         if query_column_operator[i] == '>':
-            df2 = df2.query(str(query_column_column[i]) + ' > ' + str(query_column_key[i]))
+            df2 = df2.query(str(f'`{query_column_column[i]}`' + ' > ' + str(query_column_key[i])))
     
 
 
@@ -271,6 +273,7 @@ def execute_queries():
 
     try:
         if query_column_flag == True:
+            print(query_column_key," ",query_column_operator," ",query_column_column)
             query_column(query_column_key, query_column_operator, query_column_column)
         if view_column_flag == True:
             view_column(view_column_key)
@@ -279,7 +282,8 @@ def execute_queries():
 
         file_view()
         
-    except:
+    except Exception as e:
+        print(e)
         messagebox.showerror("Data Error", "Error processing data. Please reset and try again.")
 
 def reset():
@@ -322,9 +326,7 @@ def file_view():
     global csv_file
     global file_name
     global view_row_key
-    global query_column_key
-
-    
+    global query_column_key    
     
     win = Tk()
     win.geometry('1280x720')
@@ -344,12 +346,13 @@ def file_view():
     
     file_contents = scrolledtext.ScrolledText(win, wrap=WORD)
     file_contents.config(bg='black', fg='white')
-    if df2.size == 0:
+    if df2.empty:
         file_contents.insert('1.0', "No data to display. Time to reset!")
-        file_contents.config('Verdana 16')
+        file_contents.config(font='Verdana 16')
+        canvas.create_window(640, 360, height=420, width = 1280, anchor='center', window=file_contents)
     else:
         file_contents.insert('1.0', df2.head())
-    canvas.create_window(640, 360, height=420, width = 1280, anchor='center', window=file_contents)
+        canvas.create_window(640, 360, height=420, width = 1280, anchor='center', window=file_contents)
 
     reset_btn = Button(win, text='Reset', command=lambda:[win.destroy(), reset(), file_view()])
     reset_btn.config(font='Verdana 10', fg='black', bg='light blue')
@@ -377,7 +380,7 @@ def file_view():
 
     number_entry = StringVar()
     row_entry = Entry(textvariable=number_entry)
-    canvas.create_window(340, 610, anchor='n', width=30, window=row_entry)
+    canvas.create_window(340, 610, anchor='n', width=120, window=row_entry)
 
     view_row_btn = Button(win, text='Select Row', bg='light yellow', command=lambda:[win.destroy(), view_row(number_entry.get(), row_select_var.get()), execute_queries()])
     view_row_btn.config(font='Verdana 8')
